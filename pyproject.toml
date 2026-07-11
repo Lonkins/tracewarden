@@ -72,6 +72,8 @@ ignore = ["S101"]  # asserts are fine in tests; src is covered by bandit-style S
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S105", "S106", "S107"]  # synthetic secrets in fixtures
+# detector signature tables: regexes are clearer unbroken than wrapped
+"src/tracewarden/detectors/*.py" = ["E501"]
 
 [tool.mypy]
 strict = true

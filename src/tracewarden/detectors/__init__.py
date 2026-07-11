@@ -1,6 +1,17 @@
-"""Pluggable security-event detectors. Built-ins register here as they are
-imported; every one is independently toggleable via DetectorToggles."""
+"""Pluggable security-event detectors. Importing this package registers every
+built-in; each is independently toggleable via DetectorToggles."""
 
+# import for side effect: registers the built-in detectors
+from tracewarden.detectors import (  # noqa: F401
+    cost_loop,
+    memory_poisoning,
+    pii,
+    prompt_injection,
+    scope,
+    secrets,
+    sequence,
+    tool_poisoning,
+)
 from tracewarden.detectors.base import (
     Detector,
     DetectorFactory,

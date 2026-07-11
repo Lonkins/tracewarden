@@ -50,6 +50,8 @@ class DetectionPipeline:
     def from_config(
         cls, config: TracewardenConfig, on_events: OnEvents | None = None
     ) -> DetectionPipeline:
+        import tracewarden.detectors  # noqa: F401 — registers the built-in detectors
+
         return cls(build_detectors(config), on_events=on_events)
 
     def __call__(
