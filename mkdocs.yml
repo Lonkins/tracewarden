@@ -1,0 +1,64 @@
+site_name: tracewarden
+site_description: Security-event trace layer for AI agents, built on OpenTelemetry
+site_url: https://Lonkins.github.io/tracewarden/
+repo_url: https://github.com/Lonkins/tracewarden
+repo_name: Lonkins/tracewarden
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Concepts:
+      - Attribute schema: schema.md
+      - Architecture (ADRs): adr/index.md
+  - Detectors:
+      - Catalog: detectors/catalog.md
+      - Tuning & false positives: detectors/tuning.md
+      - Local-LLM detector: detectors/llm.md
+  - Backends:
+      - Wire into Langfuse / Phoenix: backends.md
+      - Grafana dashboard: grafana.md
+  - Alerting: alerting.md
+
+plugins:
+  - search
