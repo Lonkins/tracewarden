@@ -1,10 +1,12 @@
 name: Publish
 
 # Publishes to PyPI on a GitHub Release, via PyPI Trusted Publishing (OIDC) —
-# no long-lived token. The maintainer must first register this repo+workflow as
-# a trusted publisher for the `tracewarden` project at
-# https://pypi.org/manage/account/publishing/ (one-time, free). Until then this
-# job fails at the upload step by design; the build step still validates.
+# no long-lived token. One-time maintainer setup (free):
+#   1. Register this repo + workflow as a Trusted Publisher for `tracewarden`
+#      at https://pypi.org/manage/account/publishing/
+#   2. Set repo variable PYPI_PUBLISH_ENABLED=true
+# Until both are done the publish job skips (build still runs + validates), so
+# releases stay green.
 
 on:
   release:
@@ -32,7 +34,10 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    # Skips cleanly until the maintainer both (1) registers this repo+workflow as
+    # a Trusted Publisher for `tracewarden` on PyPI and (2) sets the repo variable
+    # PYPI_PUBLISH_ENABLED=true. This keeps releases green before that one-time setup.
+    if: github.event_name == 'release' && vars.PYPI_PUBLISH_ENABLED == 'true'
     environment:
       name: pypi
       url: https://pypi.org/p/tracewarden
