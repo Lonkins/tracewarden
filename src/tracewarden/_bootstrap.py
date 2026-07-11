@@ -17,6 +17,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from tracewarden.config import TracewardenConfig
+from tracewarden.pipeline import DetectionPipeline
 
 _DEFAULT_SERVICE_NAME = "tracewarden-app"
 
@@ -28,6 +29,7 @@ class TracewardenHandle:
     provider: TracerProvider
     config: TracewardenConfig
     created_provider: bool
+    pipeline: DetectionPipeline | None = None
     _shutdown: bool = field(default=False, repr=False)
 
     def shutdown(self) -> None:
@@ -93,16 +95,25 @@ def install(
 
         _instrument(instrument)
 
-    _handle = TracewardenHandle(provider=provider, config=cfg, created_provider=created)
+    from tracewarden import _hooks
+
+    pipeline = DetectionPipeline.from_config(cfg)
+    _hooks.register_scanner(pipeline)
+
+    _handle = TracewardenHandle(
+        provider=provider, config=cfg, created_provider=created, pipeline=pipeline
+    )
     return _handle
 
 
 def uninstall() -> None:
     """Undo instrumentation, shut down what install() created, forget it all."""
     global _handle
+    from tracewarden import _hooks
     from tracewarden.instrumentation import uninstrument_all
 
     uninstrument_all()
+    _hooks.clear_scanners()
     if _handle is not None:
         _handle.shutdown()
         _handle = None
