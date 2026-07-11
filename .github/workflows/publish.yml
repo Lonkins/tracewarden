@@ -1,0 +1,46 @@
+name: Publish
+
+# Publishes to PyPI on a GitHub Release, via PyPI Trusted Publishing (OIDC) —
+# no long-lived token. The maintainer must first register this repo+workflow as
+# a trusted publisher for the `tracewarden` project at
+# https://pypi.org/manage/account/publishing/ (one-time, free). Until then this
+# job fails at the upload step by design; the build step still validates.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Build sdist + wheel
+        run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tracewarden
+    permissions:
+      id-token: write   # OIDC for Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
