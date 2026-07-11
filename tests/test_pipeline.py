@@ -146,6 +146,10 @@ def test_on_events_callback_fires() -> None:
 
 
 def test_build_detectors_respects_toggles() -> None:
+    from tracewarden.detectors import base
+
+    saved = dict(base._REGISTRY)
+    base._REGISTRY.clear()
     register("secrets")(lambda cfg: KeywordDetector())
     register("cost_loop")(lambda cfg: CountingDetector())
     try:
@@ -153,13 +157,16 @@ def test_build_detectors_respects_toggles() -> None:
         built = build_detectors(on)
         assert [type(d) for d in built] == [KeywordDetector]
     finally:
-        from tracewarden.detectors import base
-
         base._REGISTRY.clear()
+        base._REGISTRY.update(saved)
 
 
 def test_install_registers_pipeline_scanner(span_exporter: InMemorySpanExporter) -> None:
     # span_exporter fixture sets a global SDK provider; install() attaches to it.
+    from tracewarden.detectors import base
+
+    saved = dict(base._REGISTRY)
+    base._REGISTRY.clear()
     register("secrets")(lambda cfg: KeywordDetector())
     try:
         handle = tracewarden.install()
@@ -172,6 +179,5 @@ def test_install_registers_pipeline_scanner(span_exporter: InMemorySpanExporter)
         assert span_data.attributes.get(SPAN_EVENT_COUNT) == 1
     finally:
         tracewarden.uninstall()
-        from tracewarden.detectors import base
-
         base._REGISTRY.clear()
+        base._REGISTRY.update(saved)
