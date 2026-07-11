@@ -4,6 +4,7 @@ built-in; each is independently toggleable via DetectorToggles."""
 # import for side effect: registers the built-in detectors
 from tracewarden.detectors import (  # noqa: F401
     cost_loop,
+    llm,
     memory_poisoning,
     pii,
     prompt_injection,
