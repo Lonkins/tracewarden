@@ -17,7 +17,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from tracewarden.config import TracewardenConfig
-from tracewarden.pipeline import DetectionPipeline
+from tracewarden.pipeline import DetectionPipeline, OnEvents
 
 _DEFAULT_SERVICE_NAME = "tracewarden-app"
 
@@ -50,6 +50,7 @@ def install(
     config: TracewardenConfig | None = None,
     tracer_provider: TracerProvider | None = None,
     instrument: Sequence[str] | None = None,
+    on_events: OnEvents | None = None,
 ) -> TracewardenHandle:
     """Wire tracewarden into the process. Idempotent.
 
@@ -97,7 +98,7 @@ def install(
 
     from tracewarden import _hooks
 
-    pipeline = DetectionPipeline.from_config(cfg)
+    pipeline = DetectionPipeline.from_config(cfg, on_events=on_events)
     _hooks.register_scanner(pipeline)
 
     _handle = TracewardenHandle(
