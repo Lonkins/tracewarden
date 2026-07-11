@@ -17,6 +17,7 @@ from opentelemetry.trace import Span
 
 from tracewarden.config import TracewardenConfig
 from tracewarden.detectors.base import Detector, ScanContext, build_detectors
+from tracewarden.export import annotate_for_backends
 from tracewarden.schema import (
     EVENT_NAME,
     SPAN_EVENT_COUNT,
@@ -40,19 +41,28 @@ class DetectionPipeline:
         self,
         detectors: list[Detector],
         on_events: OnEvents | None = None,
+        annotate_backends: bool = True,
     ) -> None:
         self.detectors = detectors
         self._on_events = on_events
+        self._annotate_backends = annotate_backends
         self._span_events: OrderedDict[int, list[SecurityEvent]] = OrderedDict()
         self._trace_state: OrderedDict[int, MutableMapping[str, Any]] = OrderedDict()
 
     @classmethod
     def from_config(
-        cls, config: TracewardenConfig, on_events: OnEvents | None = None
+        cls,
+        config: TracewardenConfig,
+        on_events: OnEvents | None = None,
+        annotate_backends: bool = True,
     ) -> DetectionPipeline:
         import tracewarden.detectors  # noqa: F401 — registers the built-in detectors
 
-        return cls(build_detectors(config), on_events=on_events)
+        return cls(
+            build_detectors(config),
+            on_events=on_events,
+            annotate_backends=annotate_backends,
+        )
 
     def __call__(
         self,
@@ -78,12 +88,16 @@ class DetectionPipeline:
             span.add_event(EVENT_NAME, attributes=event.otel_attributes())
         accumulated = self._events_for(span)
         accumulated.extend(findings)
-        span.set_attribute(SPAN_EVENT_COUNT, len(accumulated))
-        span.set_attribute(
-            SPAN_MAX_SEVERITY,
-            max(accumulated, key=lambda e: e.severity.rank).severity.value,
-        )
-        span.set_attribute(SPAN_EVENT_TYPES, sorted({e.type.value for e in accumulated}))
+        count = len(accumulated)
+        max_severity = max(accumulated, key=lambda e: e.severity.rank).severity.value
+        types = sorted({e.type.value for e in accumulated})
+        span.set_attribute(SPAN_EVENT_COUNT, count)
+        span.set_attribute(SPAN_MAX_SEVERITY, max_severity)
+        span.set_attribute(SPAN_EVENT_TYPES, types)
+        if self._annotate_backends:
+            annotate_for_backends(
+                span, event_count=count, max_severity=max_severity, event_types=types
+            )
         if self._on_events is not None:
             self._on_events(span, findings)
 

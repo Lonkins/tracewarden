@@ -3,6 +3,7 @@
 from tracewarden._bootstrap import TracewardenHandle, install, uninstall
 from tracewarden._hooks import register_scanner, scan
 from tracewarden.config import DetectorToggles, TracewardenConfig
+from tracewarden.export import annotate_for_backends
 from tracewarden.manual import guarded_tool, llm_call, memory_write, tool_call
 from tracewarden.schema import (
     EVENT_NAME,
@@ -25,6 +26,7 @@ __all__ = [
     "TracewardenConfig",
     "TracewardenHandle",
     "__version__",
+    "annotate_for_backends",
     "guarded_tool",
     "install",
     "llm_call",
