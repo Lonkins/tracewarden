@@ -30,4 +30,5 @@ site/
 
 # Local scratch
 *.log
+*.jsonl
 tmp/
