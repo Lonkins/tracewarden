@@ -7,6 +7,7 @@ provider exists does it create one with an OTLP/HTTP exporter. See docs/adr/0002
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from opentelemetry import trace
@@ -46,12 +47,15 @@ def install(
     endpoint: str | None = None,
     config: TracewardenConfig | None = None,
     tracer_provider: TracerProvider | None = None,
+    instrument: Sequence[str] | None = None,
 ) -> TracewardenHandle:
     """Wire tracewarden into the process. Idempotent.
 
     - ``tracer_provider``: attach to this provider (explicit injection).
     - Otherwise, attach to the globally registered SDK provider if one exists.
     - Otherwise, create a provider + OTLP/HTTP exporter and register it globally.
+    - ``instrument``: framework adapters to activate, e.g. ``["openai", "mcp"]``
+      (see :data:`tracewarden.instrumentation.FRAMEWORKS`).
     """
     global _handle
     if _handle is not None and not _handle._shutdown:
@@ -84,13 +88,21 @@ def install(
             trace.set_tracer_provider(provider)
             created = True
 
+    if instrument:
+        from tracewarden.instrumentation import instrument as _instrument
+
+        _instrument(instrument)
+
     _handle = TracewardenHandle(provider=provider, config=cfg, created_provider=created)
     return _handle
 
 
 def uninstall() -> None:
-    """Shut down what install() created and forget it. Mainly for tests."""
+    """Undo instrumentation, shut down what install() created, forget it all."""
     global _handle
+    from tracewarden.instrumentation import uninstrument_all
+
+    uninstrument_all()
     if _handle is not None:
         _handle.shutdown()
         _handle = None

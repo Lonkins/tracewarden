@@ -74,6 +74,7 @@ class Surface(StrEnum):
     COMPLETION = "completion"
     TOOL_INPUT = "tool_input"
     TOOL_OUTPUT = "tool_output"
+    TOOL_DESCRIPTION = "tool_description"
     MEMORY_WRITE = "memory_write"
 
 
