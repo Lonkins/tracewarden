@@ -20,8 +20,9 @@ import os
 import time
 
 import tracewarden
+from tracewarden.alerting import AlertManager, AlertRule, file_sink, stdout_sink
 from tracewarden.manual import llm_call, memory_write, tool_call
-from tracewarden.schema import SecurityEvent, Surface
+from tracewarden.schema import Severity, Surface
 
 # A planted secret (synthetic AWS key format) and a planted injection payload.
 PLANTED_SECRET = "AKIAIOSFODNN7EXAMPLE"  # noqa: S105 — synthetic, not a real key
@@ -32,22 +33,17 @@ POISONED_TOOL_DESCRIPTION = (
 )
 
 
-def on_security_event(span: object, events: list[SecurityEvent]) -> None:
-    """Alert sink — Part 9 replaces this with the configurable alert layer."""
-    for event in events:
-        if event.severity.rank >= 2:  # high or critical
-            print(
-                f"[ALERT] {event.severity.value.upper()} {event.type.value} "
-                f"via {event.detector} ({event.rule}) on {event.surface.value}: {event.evidence}"
-            )
-
-
 def main() -> None:
     endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
+    # Alert on any high/critical finding: stderr + a JSONL file.
+    alerts = AlertManager(
+        rules=(AlertRule(min_severity=Severity.HIGH),),
+        sinks=(stdout_sink, file_sink("tracewarden-alerts.jsonl")),
+    )
     handle = tracewarden.install(
         service_name="tracewarden-demo",
         endpoint=endpoint,
-        on_events=on_security_event,
+        on_events=alerts,
     )
     print(f"tracewarden installed, exporting to {endpoint}")
 
