@@ -1,6 +1,7 @@
 # tracewarden gitleaks config — extends the default ruleset.
 # The ONLY carve-out is the synthetic detector fixtures: fabricated,
-# format-valid-but-non-functional credentials used to exercise the detectors.
+# format-valid-but-non-functional credentials (e.g. the canonical AWS docs
+# key AKIAIOSFODNN7EXAMPLE) used to exercise the detectors and examples.
 # Real secrets anywhere else in the tree are still caught.
 [extend]
 useDefault = true
@@ -8,5 +9,8 @@ useDefault = true
 [allowlist]
 description = "Synthetic detector fixtures (fabricated credentials, not real)"
 paths = [
+  '''examples/seeded_run\.py''',
   '''tests/fixtures/samples\.py''',
+  '''tests/test_detectors_secrets_pii\.py''',
+  '''tests/test_schema\.py''',
 ]
